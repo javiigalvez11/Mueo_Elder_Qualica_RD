@@ -1,5 +1,5 @@
 #include "RS485.hpp"
-#include "config.hpp" // para MACHINE_ID si lo usas aquí en helpers
+#include "config.hpp"
 
 
 uint8_t startPos = 0, version_number = 0, machineNumber_ret = 0;
@@ -97,9 +97,9 @@ namespace RS485
     sendTx();
   }
 
-  void leftOpen(uint8_t m)
+  void leftOpen(uint8_t m,int pasos)
   {
-    buildCmd(m, 0x80, 0x01, 0x00, 0x00, txBuf);
+    buildCmd(m, 0x80, pasos, 0x00, 0x00, txBuf);
     sendTx();
   }
   void leftAlwaysOpen(uint8_t m)
@@ -108,7 +108,7 @@ namespace RS485
     sendTx();
   }
 
-  void rightOpen(uint8_t m)
+  void rightOpen(uint8_t m, int pasos)
   {
     buildCmd(m, 0x82, 0x01, 0x00, 0x00, txBuf);
     sendTx();
@@ -257,6 +257,7 @@ namespace RS485
 
       if (idx >= sizeof(rxBuf))
       {
+        
         inFrame = false;
         uint8_t ok = verifyChecksum(rxBuf, (int)sizeof(rxBuf));
 

@@ -4,7 +4,7 @@
 
 // === Identidad / constantes ===
 static const char* COMERCIO   = "MUSEO_ELDER";
-static const char* DEVICE_ID  = "ME002";
+static const char* DEVICE_ID  = "ME001";
 static const char* WIFI_SSID  = "Prueba_WIFI";
 static const char* WIFI_PASS  = "Qualica_RD";
 
@@ -33,16 +33,7 @@ static const char* enVersion       = "V.1.8";
 static const uint32_t PERIOD_STATUS_MS = 3000;
 static const uint32_t TIMEOUT_PASO_MS  = 8000;
 
-// Pines
-#define PIN_RS485_RX 16
-#define PIN_RS485_TX 17
-#define PIN_GM65_RX  26
-#define PIN_GM65_TX  27
-#define PIN_RELE_ENT 21
-#define PIN_RELE_SAL 22
 
-#define RS485_BAUD   19200
-#define GM65_BAUD    9600
 #define MACHINE_ID   0x01
 
 // ====== SOLO DECLARACIONES (extern) ======
@@ -81,10 +72,13 @@ typedef enum {
   CMD_VALIDATE,       // validar barcode
   CMD_PASS_OK,        // notificar paso OK
   CMD_PASS_TIMEOUT,   // notificar que no pasó nadie (timeout)
-  CMD_SLAVE_EXIT      // apertura para salida
+  CMD_SLAVE_EXIT,     // apertura para salida
+  CMD_SLAVE_ENTRY,    // apertura para entrada
+  CMD_QR_SCAN,
+  CMD_PASS_PROGRESS   // notificar progreso (i de N)
 } CmdType;
 
 typedef struct {
   CmdType type;
-  char  payload[64];    // barcode
+  char  payload[128];    // barcode
 } CmdMsg;

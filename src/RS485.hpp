@@ -1,7 +1,12 @@
 #pragma once
 #include <Arduino.h>
 #include <HardwareSerial.h>
-#include "config.hpp"
+
+// Pines
+#define PIN_RS485_RX 16
+#define PIN_RS485_TX 17
+
+#define RS485_BAUD   19200
 
 // === RS485 ===
 static uint8_t txBuf[8];
@@ -43,10 +48,10 @@ namespace RS485
   void resetRightCount(uint8_t m);
   void resetDevice(uint8_t m);
 
-  void leftOpen(uint8_t m);
+  void leftOpen(uint8_t m, int pasos);
   void leftAlwaysOpen(uint8_t m);
 
-  void rightOpen(uint8_t m);
+  void rightOpen(uint8_t m, int pasos);
   void rightAlwaysOpen(uint8_t m);
 
   void openGateAlways(uint8_t m);

@@ -34,7 +34,7 @@ void serializaQR() {
   doc["id"]       = DEVICE_ID;
   doc["comercio"] = COMERCIO;
   doc["status"]   = estadoPuerta;
-  doc["barcode"]  = ultimoTicket;
+  doc["barcode"]  = ultimoTicket;   // SOLO el código
   doc["ec"]       = "CMD_VALIDATE";
   outputTicket.remove(0);
   serializeJson(doc, outputTicket);
@@ -44,7 +44,7 @@ void serializaPaso() {
   JsonDocument doc;
   doc["id"]      = DEVICE_ID;
   doc["status"]  = estadoPuerta;
-  doc["barcode"] = ultimoPaso;
+  doc["barcode"] = ultimoPaso;      // SOLO el código (nada de JSON embebido)
   doc["ec"]      = "CMD_PASS";
   doc["np"]      = String(pasoActual);
   doc["nt"]      = String(pasosTotales);
@@ -73,28 +73,27 @@ void serializaReportFailure() {
   serializeJson(doc, outputInicio);
 }
 
-// =====================================================
-// Deserializadores
-// =====================================================
+// ================== JSON: Deserializadores ==================
 void descifraEstado() {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, estadoRecibido);
   if (err) return;
 
-  String r  = doc["R"]  | "";
-  String ec = doc["ec"] | "";
+  String r      = doc["R"]      | "";
+  String status = doc["status"] | "";
+  String ec     = doc["ec"]     | "";
 
   if (r == "OK" && ec.length()) {
-    cambiaPuerta = ec.toInt();
+    cambiaPuerta = status.toInt();
   }
 
   switch (cambiaPuerta) {
-    case 201: activaEntrada = 1; break;
-    case 202: activaSalida  = 1; break;
-    case 203: abreContinua  = 1; break;
-    case 290: actualizarFlag    = 1; break;
-    case 300: abortarPaso   = 1; break;
-    case 310: restartFlag       = 1; break;
+    case 201: activaEntrada   = 1; break;
+    case 202: activaSalida    = 1; break;
+    case 203: abreContinua    = 1; break;
+    case 290: actualizarFlag  = 1; break;
+    case 300: abortarPaso     = 1; break;
+    case 310: restartFlag     = 1; break;
     default: break;
   }
 }
@@ -104,28 +103,24 @@ void descifraQR() {
   DeserializationError err = deserializeJson(doc, ticketRecibido);
   if (err) return;
 
-  String r  = doc["R"]  | "";
-  String ec = doc["ec"] | "";
-  String nt = doc["nt"] | "";
-  String np = doc["np"] | "";
+  String status = doc["status"] | "";
+  String nt     = doc["nt"]     | "";
+  String np     = doc["np"]     | "";
 
-  estadoTicket = ec;
-
-  if (estadoTicket == "201") {
+  // Guarda ticket/contadores y arma flags de dirección
+  if (status == "201") {
     activaConecta  = 0;
-    ultimoTicket   = ultimoTicket; // ya lo pusiste antes de serializar
     pasosTotales   = nt.toInt();
     contadorPasos  = np.toInt();
     activaEntrada  = 1;
-  } else if (estadoTicket == "202") {
+  } else if (status == "202") {
     activaConecta  = 0;
-    ultimoTicket   = ultimoTicket;
     pasosTotales   = nt.toInt();
     contadorPasos  = np.toInt();
     activaSalida   = 1;
   } else {
-    estadoTicket = "null";
-    ultimoTicket = "";
+    // invalid/denied
+    ultimoTicket   = "";
   }
 
   ticketRecibido = "";
@@ -136,9 +131,9 @@ void descifraPaso() {
   DeserializationError err = deserializeJson(doc, pasoRecibido);
   if (err) return;
 
-  String r  = doc["R"]  | "";
-  String ec = doc["ec"] | "";
-  String nt = doc["nt"] | "";
+  String r   = doc["R"]  | "";
+  String ec  = doc["ec"] | "";
+  String nt  = doc["nt"] | "";
 
   if (r == "OK") {
     cambiaPuerta  = ec.toInt();

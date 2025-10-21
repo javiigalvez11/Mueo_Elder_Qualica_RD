@@ -1,6 +1,7 @@
 #include <HardwareSerial.h>
-#include "config.hpp"
 #include "gm65.hpp"
+#include "config.hpp"
+
 
 
 // gm65.cpp

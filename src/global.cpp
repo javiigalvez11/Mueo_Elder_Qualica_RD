@@ -2,7 +2,7 @@
 
 // --- flags & estado general ---
 uint8_t  debugSerie      = 1;
-uint8_t  aperturaMode    = 1;   // 0=rele, 1=RS485
+uint8_t  aperturaMode    = 0;   // 0=rele, 1=RS485
 
 String   estadoPuerta    = "200";
 String   ultimoTicket;

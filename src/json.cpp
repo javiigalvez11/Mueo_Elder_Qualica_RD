@@ -96,6 +96,9 @@ void descifraEstado() {
     case 310: restartFlag     = 1; break;
     default: break;
   }
+
+  estadoPuerta = status;
+  estadoRecibido = "";
 }
 
 void descifraQR() {

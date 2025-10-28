@@ -2,8 +2,8 @@
 #include <Arduino.h>
 
 
-#define PIN_GM65_RX  26
-#define PIN_GM65_TX  27
+#define PIN_GM65_RX  17
+#define PIN_GM65_TX  16
 
 #define GM65_BAUD    9600
 

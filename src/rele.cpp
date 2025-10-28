@@ -12,17 +12,16 @@ void rele_begin(){
 
 void rele_open_entrada(){
 
-  Serial.println("Activando rele entrada");
   releOn(PIN_RELE_ENT);
   vTaskDelay(pdMS_TO_TICKS(1000));
   releOff(PIN_RELE_ENT);
-  Serial.println("Desactivando rele entrada");  
+
 }
 
 void rele_open_salida(){
-  Serial.println("Activando rele salida");
+
   releOn(PIN_RELE_SAL);
   vTaskDelay(pdMS_TO_TICKS(1000));
   releOff(PIN_RELE_SAL);
-  Serial.println("Desactivando rele salida");
+
 }

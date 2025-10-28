@@ -44,11 +44,16 @@ void setup() {
 
   // --- RS-485 o Relé según modo ---
   if (aperturaMode == 1) { // 0=rele, 1=RS485
+    if (debugSerie) {
+      Serial.println("[MAIN] Modo apertura: RS485");
+    }
     RS485::begin(Serial1, RS485_BAUD, PIN_RS485_RX, PIN_RS485_TX);
   } else {
+    if (debugSerie) {
+      Serial.println("[MAIN] Modo apertura: Relé");
+    }
     rele_begin(); // alternativa por relé
   }
-
   // --- GM65 (UART2) ---
   gm65_begin(Serial2, PIN_GM65_RX, PIN_GM65_TX, GM65_BAUD);
 
@@ -102,7 +107,7 @@ static bool validateAndOpen(bool salida, const String& code, uint32_t validateTi
   abortarPaso     = 0;
   ultimoTicket    = code;           // lo usa serializaQR()
   entradaPendiente= code;           // por si quieres usarla luego
-  pasoActual      = 0;              // reset marcador de paso
+
 
   // Pedir validación a NET
   CmdMsg v;
@@ -139,7 +144,6 @@ static bool validateAndOpen(bool salida, const String& code, uint32_t validateTi
     activaEntrada = 0;
     activaSalida  = 0;
     entradaPendiente.remove(0);
-    activaConecta = 1;
     return false;
   }
 
@@ -195,12 +199,14 @@ static void taskNet(void* pv) {
         // Notificar paso OK
         ultimoPaso = msg.payload;
         postPaso();
+        activaConecta = 1;
       }
       else if (msg.type == CMD_PASS_TIMEOUT) {
         // Notificar que NO pasó nadie
         pasoActual = -1;
         ultimoPaso = msg.payload;
         postPaso();
+        activaConecta = 1;
       }
     }
 
@@ -293,20 +299,29 @@ static void taskIO(void* pv) {
 
     // E) Apertura continua (toggle) — solo RS485
     if (abreContinua) {
-      if (estadoPuerta == "200") {
+      if (estadoPuerta == "203") {
         estadoPuerta = "203";
         if (debugSerie) { Serial.println("Apertura continua: ON"); }
-        RS485::openGateAlways(MACHINE_ID);
+          if (aperturaMode == 1){
+            RS485::openGateAlways(MACHINE_ID);
+          } else {
+            digitalWrite(PIN_RELE_ENT, LOW); // Abrir por relé si está en ese modo
+          } 
+
       } else {
         estadoPuerta = "200";
         if (debugSerie) { Serial.println("Apertura continua: OFF"); }
-        RS485::closeGate(MACHINE_ID);
+          if (aperturaMode == 1) {
+            RS485::closeGate(MACHINE_ID);
+          } else {
+            digitalWrite(PIN_RELE_ENT, HIGH); // Cerrar por relé si está en ese modo
+          }
       }
       abreContinua = 0;
     }
 
     // F) Housekeeping RS485
-    RS485::poll();
+    if(aperturaMode == 1) RS485::poll();
 
     // G) Yield
     vTaskDelay(pdMS_TO_TICKS(5));
@@ -322,6 +337,7 @@ static void realizarPaso(bool salida, const String& code) {
 
   // Abrir
   if (aperturaMode == 0) { // 0=rele, 1=RS485
+    
     if (!salida) {
       if (debugSerie) Serial.println("[IO] Apertura mediante RELE de ENTRADA");
       rele_open_entrada();
@@ -329,6 +345,9 @@ static void realizarPaso(bool salida, const String& code) {
       if (debugSerie) Serial.println("[IO] Apertura mediante RELE de SALIDA");
       rele_open_salida();
     }
+
+    contadorPasos = contadorPasos + 1; // asumimos paso OK inmediato
+
   } else {
     if (salida)  RS485::leftOpen(MACHINE_ID, pasosTotales);
     else         RS485::rightOpen(MACHINE_ID, pasosTotales);
@@ -344,33 +363,31 @@ static void realizarPaso(bool salida, const String& code) {
       vTaskDelay(pdMS_TO_TICKS(10));
     }
     RS485::closeGate(MACHINE_ID);
-  }
 
-  // Notificar a NET (usa los mismos endpoints que ya tienes)
-  if (abortarPaso) {
-    if (debugSerie) Serial.println("[IO] Paso abortado.");
-    abortarPaso    = 0;
-    // Rehabilitar /status
-    activaConecta  = 1;
-    pasoActual     = 0;
-  } else {
-    const bool personaPaso = (contadorPasos > pasosPrevios);
-
-    if (personaPaso) {
-      pasoActual = contadorPasos;
-      CmdMsg ok; ok.type = CMD_PASS_OK;
-      strlcpy(ok.payload, code.c_str(), sizeof(ok.payload));
-      xQueueSend(qToNet, &ok, 0);
-    } else {
-      pasoActual = -1;
-      CmdMsg to; to.type = CMD_PASS_TIMEOUT;
-      strlcpy(to.payload, code.c_str(), sizeof(to.payload));
-      xQueueSend(qToNet, &to, 0);
-      contadorPasos = 0;
     }
+    
+    // Notificar a NET (usa los mismos endpoints que ya tienes)
+    if (abortarPaso) {
+      if (debugSerie) Serial.println("[IO] Paso abortado.");
+      abortarPaso    = 0;
+      // Rehabilitar /status
+      activaConecta  = 1;
+      pasoActual     = 0;
+    } else {
+      const bool personaPaso = (contadorPasos > pasosPrevios);
 
-    // Rehabilitar /status
-    activaConecta = 1;
+      if (personaPaso) {
+        pasoActual = contadorPasos;
+        CmdMsg ok; ok.type = CMD_PASS_OK;
+        strlcpy(ok.payload, code.c_str(), sizeof(ok.payload));
+        xQueueSend(qToNet, &ok, 0);
+      } else {
+        pasoActual = -1;
+        CmdMsg to; to.type = CMD_PASS_TIMEOUT;
+        strlcpy(to.payload, code.c_str(), sizeof(to.payload));
+        xQueueSend(qToNet, &to, 0);
+        contadorPasos = 0;
+      }
   }
 }
 

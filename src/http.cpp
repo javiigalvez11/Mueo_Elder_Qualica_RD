@@ -147,6 +147,7 @@ void postTicket() {
     if (debugSerie) Serial.println("[API] ERROR: validateQR");
     activaConecta = 1;  // reactiva /status
     activaEntrada = 0;  // reactiva entrada
+    activaSalida  = 0;  // reactiva salidas
     return;
   }
 
@@ -167,6 +168,9 @@ void postPaso() {
   String resp;
   if (!post(url, outputPaso, resp)) {
     if (debugSerie) Serial.println("[API] ERROR: validatePass");
+    activaConecta = 1;  // reactiva /status
+    activaEntrada = 0;  // reactiva entrada
+    activaSalida  = 0;  // reactiva salida
     return;
   }
   pasoRecibido = resp;
@@ -230,6 +234,8 @@ static void handle_reader_scan() {
   CmdMsg m; m.type = CMD_SLAVE_ENTRY; strlcpy(m.payload, code.c_str(), sizeof(m.payload));
   xQueueSend(g_qToIO, &m, 0);
 
+  estadoPuerta="201";
+  activaEntrada = 1;
   server.sendHeader("Connection","close");
   server.send(200, "application/json", "{\"R\":\"OK\"}");
 }
@@ -262,7 +268,7 @@ static void handle_slave_entry() {
     return;
   }
 
-  activaEntrada = 1;
+  estadoPuerta="201";
   server.sendHeader("Connection","close");
   server.send(200, "application/json", "{\"R\":\"OK\"}");
 }
@@ -295,6 +301,7 @@ static void handle_slave_exit() {
     return;
   }
 
+  estadoPuerta="202";
   activaSalida = 1;
   server.sendHeader("Connection","close");
   server.send(200, "application/json", "{\"R\":\"OK\"}");

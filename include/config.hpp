@@ -36,6 +36,7 @@ static const uint32_t TIMEOUT_PASO_MS  = 8000;
 
 #define MACHINE_ID   0x01
 
+
 // ====== SOLO DECLARACIONES (extern) ======
 extern uint8_t  debugSerie;
 extern uint8_t  aperturaMode;

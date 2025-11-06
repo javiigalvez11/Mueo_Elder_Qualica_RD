@@ -2,9 +2,8 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-#define PIN_RELE_ENT 27
-#define PIN_RELE_SAL 26
+#define PIN_RELE 14
 
 void rele_begin();
-void rele_open_entrada(); // pulso de apertura
-void rele_open_salida();  // pulso de apertura
+void rele_open();         // abre ambos relés
+void rele_close();        // cierra ambos relés

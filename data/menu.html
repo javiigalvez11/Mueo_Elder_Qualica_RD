@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Menú Principal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <style>
+    /* Estilos generales del cuerpo de la página */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      /* Fondo gris muy claro */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      color: #333;
+      /* Color de texto oscuro general */
+    }
+
+    /* Contenedor principal para el menú (el "cuadro") */
+    .container {
+      background-color: #ffffff;
+      /* Fondo blanco para el cuadro */
+      padding: 30px;
+      border-radius: 8px;
+      /* Esquinas ligeramente redondeadas */
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      /* Sombra sutil */
+      text-align: center;
+      /* Centra el texto dentro del contenedor */
+      max-width: 400px;
+      /* Ancho máximo moderado */
+      width: 90%;
+      /* Ancho responsivo */
+      border: 1px solid #e0e0e0;
+      /* Borde muy fino y discreto */
+    }
+
+    /* Título del menú */
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    /* Párrafo descriptivo */
+    p {
+      color: #555;
+      margin-bottom: 25px;
+      font-size: 1.1em;
+    }
+
+    /* Estilos de la lista de opciones */
+    ul {
+      list-style: none;
+      /* Quita los puntos de la lista */
+      padding: 0;
+      margin: 0 0 30px 0;
+      /* Espacio debajo de la lista */
+    }
+
+    li {
+      margin-bottom: 12px;
+      /* Espacio entre cada elemento del menú */
+    }
+
+    /* Estilos de los enlaces (botones del menú) */
+    a {
+      display: block;
+      /* Hace que el enlace ocupe todo el ancho del li */
+      text-decoration: none;
+      /* Quita el subrayado */
+      background-color: #6c757d;
+      /* Gris medio para los botones */
+      color: white;
+      /* Texto blanco */
+      padding: 12px 20px;
+      border-radius: 5px;
+      font-size: 1.1em;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      /* Transición suave al interactuar */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      /* Sombra para los botones */
+    }
+
+    a:hover {
+      background-color: #5a6268;
+      /* Gris más oscuro al pasar el ratón */
+      transform: translateY(-1px);
+      /* Pequeño efecto de elevación */
+    }
+
+    a:active {
+      transform: translateY(0);
+      /* Vuelve a la posición original al hacer clic */
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      /* Sombra más pequeña al hacer clic */
+    }
+
+    /* Estilo específico para el botón "Salir" */
+    a[href="/logout"] {
+      background-color: #dc3545;
+      /* Rojo para "Salir" */
+      margin-top: 20px;
+      box-shadow: none;
+      /* Sin sombra extra para este botón si no la quieres */
+    }
+
+    a[href="/logout"]:hover {
+      background-color: #c82333;
+      /* Rojo más oscuro al pasar el ratón */
+    }
+  </style>
+  <script>
+    // Tiempo de inactividad en milisegundos (debe coincidir con INACTIVITY_TIMEOUT_MS en el ESP32)
+    const INACTIVITY_TIMEOUT_MS = 300000; // 5 minutos
+    let timeoutId;
+
+    function resetTimer() {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(redirectToLogin, INACTIVITY_TIMEOUT_MS);
+      // console.log("Temporizador reiniciado."); // Para depuración
+    }
+
+    function redirectToLogin() {
+      // console.log("Redirigiendo por inactividad..."); // Para depuración
+      window.location.href = "/logout"; // Redirige a /logout para deslogear en el servidor y luego a /
+    }
+
+    // Eventos que reinician el temporizador
+    const events = ['mousemove', 'keypress', 'click', 'scroll', 'touchstart', 'keydown'];
+
+    // Añade los listeners de eventos al documento
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer, false);
+    });
+
+    // Inicia el temporizador cuando la página se carga
+    window.onload = resetTimer;
+
+    // Manejar la visibilidad de la pestaña para evitar redirecciones inesperadas
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        clearTimeout(timeoutId); // Si la pestaña no está activa, pausa el temporizador
+        // console.log("Pestaña oculta, temporizador pausado.");
+      } else {
+        resetTimer(); // Si la pestaña vuelve a estar activa, reinicia el temporizador
+        // console.log("Pestaña visible, temporizador reiniciado.");
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>MENÚ PRINCIPAL</h2>
+    <p>Elige una opción:</p>
+    <ul>
+      <li><a href="/upload_firmware">Actualizar firmware</a></li>
+      <li><a href="/upload_fs">Actualizar sistema de ficheros</a></li>
+      <li><a href="/reiniciar">Reiniciar dispositivo</a></li>
+    </ul>
+    <a href="/logout">Cerrar Sesión</a>
+  </div>
+</body>
+
+</html>

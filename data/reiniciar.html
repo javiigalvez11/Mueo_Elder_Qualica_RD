@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Reiniciar Dispositivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100vw;
+            /* <-- ADD THIS LINE */
+            margin: 0;
+            color: #333;
+            /* Optional: You can also add overflow: hidden; if you ever encounter scrollbars you don't expect */
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid #e0e0e0;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        button,
+        .button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 0;
+        }
+
+        button.reboot {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        button.reboot:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+
+        button.reboot:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .button.back {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .button.back:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .button.back:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+    <script>
+        // Tiempo de inactividad en milisegundos (debe coincidir con INACTIVITY_TIMEOUT_MS en el ESP32)
+        const INACTIVITY_TIMEOUT_MS = 300000; // 5 minutos
+        let timeoutId;
+
+        function resetTimer() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(redirectToLogin, INACTIVITY_TIMEOUT_MS);
+        }
+
+        function redirectToLogin() {
+            window.location.href = "/logout";
+        }
+
+        const events = ['mousemove', 'keypress', 'click', 'scroll', 'touchstart', 'keydown'];
+        events.forEach(event => {
+            document.addEventListener(event, resetTimer, false);
+        });
+        window.onload = resetTimer;
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+                clearTimeout(timeoutId);
+            } else {
+                resetTimer();
+            }
+        });
+
+        function confirmAndReboot() {
+            if (confirm("¿Estás seguro de que quieres reiniciar el dispositivo? Esto puede tardar unos segundos.")) {
+                fetch('/reiniciar_dispositivo', { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('El dispositivo se está reiniciando. Por favor, espera y recarga la página en unos segundos.');
+                        } else {
+                            alert('Error al intentar reiniciar el dispositivo.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error de conexión al intentar reiniciar el dispositivo.');
+                    });
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>REINICIAR DISPOSITIVO</h2>
+        <p>Haz clic en el botón de abajo para reiniciar el ESP32. Esto puede ser útil para aplicar algunos cambios o
+            resolver problemas.</p>
+        <div class="button-group">
+            <button class="reboot" onclick="confirmAndReboot()">Reiniciar ahora</button>
+            <a href="/menu" class="button back">Volver al menú</a>
+        </div>
+    </div>
+</body>
+
+</html>

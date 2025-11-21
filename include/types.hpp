@@ -1,3 +1,6 @@
+#ifndef TYPES_HPP
+#define TYPES_HPP
+
 #pragma once
 #include <stdint.h>
 
@@ -6,7 +9,7 @@
 // ============================================================================
 
 // Tipo de comando entre tareas (cola IO -> NET y viceversa)
-enum CmdType : uint8_t {
+enum CmdType {
   CMD_NONE = 0,
   CMD_READY,
   CMD_OPEN_CONTINUOUS,
@@ -16,6 +19,7 @@ enum CmdType : uint8_t {
   CMD_PASS_TIMEOUT,
   CMD_PASSED_IN,
   CMD_PASSED_OUT,
+  CMD_RESTART,
   CMD_UPDATE
 };
 
@@ -46,3 +50,5 @@ static inline const char* qrKindToStr(QRKind k) {
     default:         return "?";
   }
 }
+
+#endif // TYPES_HPP

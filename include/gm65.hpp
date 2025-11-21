@@ -1,7 +1,10 @@
+#ifndef GM65_HPP
+#define GM65_HPP
+
 #pragma once
 #include <Arduino.h>
 #include <HardwareSerial.h>
-#include "types.hpp"   // QRKind
+#include "types.hpp" // QRKind
 
 // ============================================================================
 // GM65 — Lector de códigos (UART2). Normaliza tres formatos de QR:
@@ -12,9 +15,9 @@
 // ============================================================================
 
 // Pines UART del GM65 (ajusta si fuese necesario)
-#define PIN_GM65_RX  27
-#define PIN_GM65_TX  26
-#define GM65_BAUD    9600
+#define PIN_GM65_RX 27
+#define PIN_GM65_TX 26
+#define GM65_BAUD 9600
 
 // Inicializa UART2 para el GM65
 void gm65_begin();
@@ -24,4 +27,6 @@ bool gm65_readLine(String &out);
 
 // Lee línea, normaliza y clasifica. Devuelve false si no pasa reglas estrictas.
 // Si 'kindOut' no es null, escribe ahí el tipo detectado.
-bool gm65_readLine_parsed(String& outCode, QRKind* kindOut = nullptr);
+bool gm65_readLine_parsed(String &outCode, QRKind *kindOut = nullptr);
+
+#endif // GM65_HPP

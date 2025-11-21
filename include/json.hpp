@@ -1,3 +1,5 @@
+#ifndef JSON_HPP
+#define JSON_HPP
 #pragma once
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -20,13 +22,11 @@ void descifraEstado();
 void descifraQR();
 void descifraPaso();
 
-// ---- Señal de salud HTTP (invocada desde http.cpp) ----
-// Si ya tienes otra implementación en otro módulo, deja esta tal cual;
-// si no, esta versión sirve de no-op y no rompe nada.
-void marcaHttpOk(bool ok);
-
+void resetCycleReady();
 // ============================================================================
 // NOTA: Las variables globales usadas por estas funciones (debugSerie, flags,
 // buffers, etc.) están declaradas como extern en config.hpp y definidas en tu
 // módulo de globals. Este header NO define globals nuevas.
 // ============================================================================
+
+#endif // JSON_HPP

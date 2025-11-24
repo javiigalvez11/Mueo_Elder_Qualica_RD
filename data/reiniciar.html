@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
     <style>
+        :root {
+            --btn-height: 48px;     /* altura del botón */
+            --btn-radius: 5px;
+            --btn-font-size: 1.1rem;
+            --gap: 15px;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -14,10 +25,8 @@
             align-items: center;
             min-height: 100vh;
             width: 100vw;
-            /* <-- ADD THIS LINE */
             margin: 0;
             color: #333;
-            /* Optional: You can also add overflow: hidden; if you ever encounter scrollbars you don't expect */
         }
 
         .container {
@@ -49,25 +58,32 @@
             margin-top: 30px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: var(--gap);
         }
 
+        /* base shared by <button> and .button (anchor) */
         button,
         .button {
-            display: block;
+            display: inline-flex;              /* flex for perfect centering */
+            align-items: center;
+            justify-content: center;
             width: 100%;
-            padding: 12px 20px;
+            min-height: var(--btn-height);     /* fuerza la misma altura */
+            padding: 0 20px;                   /* padding horizontal */
             border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
+            border-radius: var(--btn-radius);
+            font-size: var(--btn-font-size);
             cursor: pointer;
             text-decoration: none;
             text-align: center;
             transition: background-color 0.2s ease, transform 0.1s ease;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin: 0;
+            box-sizing: border-box;
+            line-height: 1;                    /* evita diferencias por line-height */
         }
 
+        /* botón rojo - mantener dimensiones visuales actuales */
         button.reboot {
             background-color: #dc3545;
             color: white;
@@ -83,9 +99,11 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
+        /* botón gris: hacer exactamente igual que el rojo en tamaño y estilo general */
         .button.back {
             background-color: #6c757d;
             color: white;
+            display: inline-flex; /* redundante pero explícito */
         }
 
         .button.back:hover {
@@ -96,6 +114,19 @@
         .button.back:active {
             transform: translateY(0);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Para que el enlace no cambie el cursor o subraye */
+        .button.back {
+            cursor: pointer;
+        }
+
+        /* Si quieres que el botón gris tenga exactamente los mismos paddings visuales
+           que el botón rojo incluso con diferentes tipos de elemento, esta regla las iguala. */
+        button.reboot,
+        .button.back {
+            padding-top: 0;
+            padding-bottom: 0;
         }
     </style>
     <script>
@@ -151,7 +182,7 @@
             resolver problemas.</p>
         <div class="button-group">
             <button class="reboot" onclick="confirmAndReboot()">Reiniciar ahora</button>
-            <a href="/menu" class="button back">Volver al menú</a>
+            <a href="/menu" class="button back" role="button">Volver al menú</a>
         </div>
     </div>
 </body>

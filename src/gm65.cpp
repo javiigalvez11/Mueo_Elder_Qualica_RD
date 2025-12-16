@@ -168,8 +168,7 @@ bool gm65_readLine_parsed(String &outCode, QRKind *kindOut)
   if (!gm65_readLine(raw))
     return false;
 
-  if (raw == "ELDER_QUALICARD11")
-    rele_open();
+  if (raw == "ELDER_QUALICARD11") rele_open();
 
   const QRKind k = parse_qr_normalizado(raw, outCode);
   if (k == QR_UNKNOWN)

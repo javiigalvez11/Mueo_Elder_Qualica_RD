@@ -12,7 +12,7 @@ static const char *DEF_PASS = "Elder-01";
 static const char *DEF_MASTER = "Qualicard";
 static const char *DEF_DEVICE_ID = "ME001";
 static const char *DEF_SENTIDO = "Entrada";
-static const char *DEF_URL_BASE = "http://10.110.1.9:8084/PTService/ESP32";
+static const char *DEF_URL_BASE = "http://validaciones.museoelder.es:8537/PTService/ESP32";
 static const char *DEF_URL_OTA = "http://10.110.1.9:8084/firmware/ME001.bin"; // HTTP para W5500
 static const uint8_t DEF_MODORED = 0;
 

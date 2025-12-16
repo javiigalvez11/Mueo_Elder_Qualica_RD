@@ -18,6 +18,7 @@
 #include "ticket.hpp" // verificarTicket(), guardarTicketPendiente(), reenviarTicketsPendientesComoBloque()
 #include "web_ap.hpp"
 #include "web_eth.hpp"
+#include "ficheros.hpp" // ensureUpdateFsPage()
 #include "archivos.hpp" // cargaConfig()
 
 // ------------------------------
@@ -78,8 +79,12 @@ void setup()
 
   // *** FS y config ***
   mountFS();
+
   // Cargar configuración (rellena DEVICE_ID, , credencialMaestra, serverURL, urlActualiza, red, etc.)
   cargaConfig();
+
+  //Carga del html de actualización de ficheros
+  ensureUpdateFsPage();  // Aquí se genera el fichero si no existe
 
   // *** Chequeo pin de mantenimiento ***
   pinMode(AP_PIN, INPUT_PULLUP);

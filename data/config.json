@@ -8,8 +8,8 @@
     "urlBase": "http://validaciones.museoelder.es:8537/PTService/ESP32",
     "urlActualizar": "https://grupocayp.es/wp-content/uploads/Elder.bin",
     "modoRed": 0,
-    "ip": "10.110.1.201",
-    "gateway": "10.110.1.254",
+    "ip": "192.168.1.194",
+    "gateway": "192.168.1.250",
     "subnet": "255.255.255.0",
     "dns1": "8.8.8.8",
     "dns2": "4.4.4.4"

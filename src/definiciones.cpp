@@ -91,4 +91,4 @@ IPAddress DNS2 = IPAddress(0, 0, 0, 0);
 uint8_t mac[6] = {0x1C, 0x69, 0x20, 0xE6, 0x21, 0x78};
 
 // =================== Debug ===================
-uint8_t debugSerie = 0; // 0 = off, 1 = on
+uint8_t debugSerie = 1; // 0 = off, 1 = on

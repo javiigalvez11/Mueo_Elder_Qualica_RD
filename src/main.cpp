@@ -18,8 +18,9 @@
 #include "ticket.hpp" // verificarTicket(), guardarTicketPendiente(), reenviarTicketsPendientesComoBloque()
 #include "web_ap.hpp"
 #include "web_eth.hpp"
-#include "ficheros.hpp" // ensureUpdateFsPage()
-#include "archivos.hpp" // cargaConfig()
+#include "ficheros.hpp"     // ensureUpdateFsPage()
+#include "config_prefs.hpp" // cfgLoad(), cfgApplyToGlobals()
+#include "logBuf.hpp"       // logbuf_begin(), logbuf_add()
 
 // ------------------------------
 // Servidor web global (coincidir con web.cpp)
@@ -77,14 +78,32 @@ void setup()
   Serial.begin(115200);
   delay(300);
 
-  // *** FS y config ***
   mountFS();
 
-  // Cargar configuración (rellena DEVICE_ID, , credencialMaestra, serverURL, urlActualiza, red, etc.)
-  cargaConfig();
+  logbuf_begin();
 
-  //Carga del html de actualización de ficheros
-  ensureUpdateFsPage();  // Aquí se genera el fichero si no existe
+  cfgBegin();
+  cfgEnsureFirmwareDefaults(); // <- CLAVE: aquí “reseteas” al actualizar firmware
+  TornoConfig c = cfgLoad();
+  cfgApplyToGlobals(c);
+
+  if (debugSerie)
+  {
+    Serial.println("=== CONFIG (NVS) ===");
+    Serial.println("DEVICE_ID: " + DEVICE_ID);
+    Serial.println("sentido: " + sentido);
+    Serial.print("modoRed: ");
+    Serial.println(modoRed);
+    Serial.println("IP: " + IP.toString());
+    Serial.println("GW: " + GATEWAY.toString());
+    Serial.println("MASK: " + SUBNET.toString());
+    Serial.println("DNS1: " + DNS1.toString());
+    Serial.println("DNS2: " + DNS2.toString());
+    Serial.println("serverURL: " + serverURL);
+  }
+
+  // Carga del html de actualización de ficheros
+   ensureWebPagesInLittleFS(true); // Aquí se genera el fichero si no existe
 
   // *** Chequeo pin de mantenimiento ***
   pinMode(AP_PIN, INPUT_PULLUP);
@@ -425,7 +444,6 @@ static void taskNet(void *pv)
         }
         else if (debugSerie)
         {
-          if (debugSerie)
             Serial.println("[NET] PASS_OK offline → no se postea validatePass");
         }
         activaConecta = 1;
@@ -467,7 +485,10 @@ static void taskNet(void *pv)
     {
       registrado_eth = false;
       errorMessage_eth = "";
-      Serial.println("Sesión expirada por inactividad.");
+      logbuf_enable(false);
+      logbuf_clear();
+      if (debugSerie)
+        Serial.println("Sesión expirada por inactividad.");
     }
 
     vTaskDelay(pdMS_TO_TICKS(10));
@@ -502,6 +523,10 @@ static void taskIO(void *pv)
           Serial.println(code);
         }
 
+        logbuf_pushf("[GM65] %s", code.c_str());
+        logbuf_pushf("[IO] sentido=%s -> %s", sentido.c_str(),
+                     (sentido == "Entrada") ? "CMD_VALIDATE_IN" : "CMD_VALIDATE_OUT");
+
         if (sentido == "Entrada")
         {
           estadoMaquina = CMD_VALIDATE_IN;
@@ -534,6 +559,7 @@ static void realizarPaso(const String &code)
 
   // Pulso de apertura (si tu driver no cierra solo, haz un close diferido)
   rele_open();
+  aperturasTotales = aperturasTotales + 1;
   // vTaskDelay(pdMS_TO_TICKS(300));
   // rele_close();
 

@@ -1,17 +1,33 @@
 #pragma once
 
-// Inicializa (si hace falta) y atiende a los clientes HTTP
+#include <Arduino.h>   // String
+#include <Ethernet.h>  // EthernetClient
+
+// Atiende a los clientes HTTP (llamar desde tu task/loop)
 void webHandleClient();
 
-// Helpers de rutas
-void handleRoot(class EthernetClient &client);
-void handleSubmit(class EthernetClient &client, const String &body);
-void handleMenu(class EthernetClient &client);
-void handleReiniciarPage(class EthernetClient &client);
-void handleReiniciarDispositivo(class EthernetClient &client);
-void handleFirmwarePage(class EthernetClient &client);
-void handleLogout(class EthernetClient &client);
+// ================= Rutas públicas =================
+// Login / menú
+void handleRoot(EthernetClient &client);
+void handleSubmit(EthernetClient &client, const String &body);
+void handleMenu(EthernetClient &client);
+void handleLogout(EthernetClient &client);
 
-// NUEVO: páginas y upload de LittleFS
-void handleFsPage(class EthernetClient &client);
-void handleFsUpload(class EthernetClient &client, int contentLength, const String &contentType);
+// Reinicio
+void handleReiniciarPage(EthernetClient &client);
+void handleReiniciarDispositivo(EthernetClient &client);
+
+// Firmware OTA
+void handleFirmwarePage(EthernetClient &client);
+
+// LittleFS (página + upload)
+void handleFsPage(EthernetClient &client);
+
+// Config (Preferences)
+void handleConfigPage(EthernetClient &client);
+void handleConfigSave(EthernetClient &client, const String &body);
+
+// Stats / contadores
+void handleStats(EthernetClient &client);
+void handleResetAperturas(EthernetClient &client);
+

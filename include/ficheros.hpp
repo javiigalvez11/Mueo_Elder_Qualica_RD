@@ -5,8 +5,8 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <LittleFS.h>
+#include <pgmspace.h>
 
-
-void ensureUpdateFsPage();
+bool ensureWebPagesInLittleFS(bool formatOnFail);
 
 #endif // FICHEROS_HPP

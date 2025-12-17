@@ -18,6 +18,7 @@
 
 // =================== Identidad y versión ===================
 extern String DEVICE_ID;       // Debe coincidir con nombrePlaca
+extern uint32_t aperturasTotales; // Contador total de aperturas
 extern String enVersion;       // Versión actual de firmware (p.ej. "V.1.8")
 extern String versionAnterior; // Versión previa (si la usas en UI)
 

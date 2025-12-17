@@ -1,8 +1,6 @@
 // W5500.cpp
 #include <SPI.h>
 #include <Ethernet.h>
-#include <LittleFS.h>
-#include <ArduinoJson.h>
 
 #include "W5500.hpp"
 #include "definiciones.hpp"
@@ -46,6 +44,11 @@ void begin_ethernet()
   {
     // DHCP
     Ethernet.begin(mac);
+
+    IP = Ethernet.localIP();
+    GATEWAY = Ethernet.gatewayIP();
+    SUBNET = Ethernet.subnetMask();
+    DNS1 = Ethernet.dnsServerIP();
   }
   else
   {

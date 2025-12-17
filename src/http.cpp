@@ -1,6 +1,7 @@
 #include "http.hpp"
 #include "definiciones.hpp"
 #include "json.hpp" // serializa*/descifra* + globals (output*, *Recibido, flags…)
+#include "logBuf.hpp"
 
 #include <Ethernet.h>
 #include <Update.h> // OTA en ESP32
@@ -8,6 +9,82 @@
 #include <WiFiClientSecure.h>
 
 // ================== Helpers internos (solo en este .cpp) ====================
+
+#include <ArduinoJson.h>
+
+// Ajusta si quieres truncar para no llenar el log
+static const size_t HTTP_LOG_MAX_CHARS = 512;
+
+static String truncateForLog(const String &s, size_t maxChars)
+{
+  if (maxChars == 0 || s.length() <= maxChars)
+    return s;
+  return s.substring(0, maxChars) + "...(truncado)";
+}
+static void log_line_both(const char *fmt, ...)
+{
+  char buf[512];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+
+  logbuf_pushf("%s", buf);
+  if (debugSerie)
+    Serial.println(buf);
+}
+
+// Mete texto largo en logBuf/Serial troceado para que NO se corte
+static void log_text_both(const char *prefix, const String &text, size_t chunk = 180)
+{
+  if (prefix && *prefix)
+    log_line_both("%s", prefix);
+
+  for (size_t i = 0; i < text.length(); i += chunk)
+  {
+    String part = text.substring(i, min(i + chunk, (size_t)text.length()));
+    log_line_both("%s", part.c_str());
+  }
+}
+
+static void dumpJsonFieldsFromString(const char *tag, const String &json)
+{
+  if (!debugSerie)
+    return;
+
+  JsonDocument d;
+  DeserializationError err = deserializeJson(d, json);
+
+  Serial.print("[HTTP][");
+  Serial.print(tag);
+  Serial.println("] Campos:");
+
+  if (err)
+  {
+    Serial.print("  (JSON inválido) ");
+    Serial.println(err.c_str());
+    Serial.println("------------------------------");
+    return;
+  }
+
+  JsonObjectConst obj = d.as<JsonObjectConst>();
+  if (obj.isNull())
+  {
+    Serial.println("  (no es un objeto JSON)");
+    Serial.println("------------------------------");
+    return;
+  }
+
+  for (JsonPairConst kv : obj)
+  {
+    Serial.print("  - ");
+    Serial.print(kv.key().c_str());
+    Serial.print(" = ");
+    serializeJson(kv.value(), Serial);
+    Serial.println();
+  }
+  Serial.println("------------------------------");
+}
 
 template <typename TClient>
 static bool readLine(TClient &c, String &line, uint32_t timeout_ms)
@@ -99,14 +176,12 @@ static bool postJSON(const String &url, const String &payload, String &response)
 
   if (Ethernet.localIP() == IPAddress(0, 0, 0, 0))
   {
-    if (debugSerie)
-      Serial.println(F("[HTTP] Ethernet sin IP."));
+    log_line_both("[HTTP][ETH][ERR] Ethernet sin IP.");
     return false;
   }
   if (!url.startsWith("http://"))
   {
-    if (debugSerie)
-      Serial.println(F("[HTTP] Solo HTTP (no HTTPS) con W5500."));
+    log_line_both("[HTTP][ETH][ERR] Solo HTTP (no HTTPS) con W5500.");
     return false;
   }
 
@@ -114,36 +189,49 @@ static bool postJSON(const String &url, const String &payload, String &response)
   uint16_t port;
   if (!parseHttpUrl(url, host, port, path))
   {
-    if (debugSerie)
-      Serial.println(F("[HTTP] URL inválida."));
+    log_line_both("[HTTP][ETH][ERR] URL inválida.");
     return false;
   }
+
+  // ---- LOG OUT (bonito) ----
+  log_line_both("[HTTP][ETH] POST %s", url.c_str());
+  if (debugSerie)
+  {
+    Serial.println("[HTTP][OUT] Payload:");
+    Serial.println(truncateForLog(payload, HTTP_LOG_MAX_CHARS));
+  }
+  // Si quieres también campos OUT, tu json.hpp ya lo hace al serializar (debugDumpJson).
+  // Aquí solo imprimimos el string por si acaso.
 
   EthernetClient client;
   client.setTimeout(HTTP_TIMEOUT_MS);
 
   if (debugSerie)
   {
-    Serial.print(F("[HTTP][ETH] Conectando "));
+    Serial.print("[HTTP][ETH] Conectando ");
     Serial.print(host);
     Serial.print(':');
     Serial.print(port);
-    Serial.print(F(" ... "));
+    Serial.print(" ... ");
   }
+
   if (!client.connect(host.c_str(), port))
   {
     if (debugSerie)
-      Serial.println(F("FALLO"));
+      Serial.println("FALLO");
+    log_line_both("[HTTP][ETH][ERR] connect %s:%u FAILED", host.c_str(), port);
     return false;
   }
-  if (debugSerie)
-    Serial.println(F("OK"));
 
-  // --- Enviar petición ---
-  client.print(F("POST "));
+  if (debugSerie)
+    Serial.println("OK");
+  log_line_both("[HTTP][ETH] Conectado %s:%u", host.c_str(), port);
+
+  // ---- Enviar petición ----
+  client.print("POST ");
   client.print(path);
-  client.println(F(" HTTP/1.1"));
-  client.print(F("Host: "));
+  client.println(" HTTP/1.1");
+  client.print("Host: ");
   client.print(host);
   if (port != 80)
   {
@@ -151,35 +239,40 @@ static bool postJSON(const String &url, const String &payload, String &response)
     client.print(port);
   }
   client.println();
-  client.println(F("Content-Type: application/json"));
-  client.println(F("Connection: close"));
-  client.print(F("Content-Length: "));
+  client.println("Content-Type: application/json");
+  client.println("Connection: close");
+  client.print("Content-Length: ");
   client.println(payload.length());
   client.println();
   client.print(payload);
 
-  // --- Leer status line ---
+  // ---- Leer status line ----
   String line;
   if (!readLine(client, line, HTTP_TIMEOUT_MS))
   {
     client.stop();
+    log_line_both("[HTTP][ETH][ERR] Timeout leyendo status line");
     return false;
   }
-  int sp1 = line.indexOf(' '), sp2 = (sp1 >= 0) ? line.indexOf(' ', sp1 + 1) : -1;
+
+  int sp1 = line.indexOf(' ');
+  int sp2 = (sp1 >= 0) ? line.indexOf(' ', sp1 + 1) : -1;
   int status = (sp2 > sp1) ? line.substring(sp1 + 1, sp2).toInt() : 0;
 
-  // --- Leer headers ---
+  // ---- Leer headers ----
   bool chunked = false;
   size_t contentLen = 0;
+
   while (readLine(client, line, HTTP_TIMEOUT_MS))
   {
     if (line.length() == 0)
-      break; // fin headers
+      break;
+
     String l = line;
     l.toLowerCase();
-    if (l.startsWith(F("transfer-encoding:")) && l.indexOf(F("chunked")) >= 0)
+    if (l.startsWith("transfer-encoding:") && l.indexOf("chunked") >= 0)
       chunked = true;
-    else if (l.startsWith(F("content-length:")))
+    else if (l.startsWith("content-length:"))
     {
       int colon = line.indexOf(':');
       if (colon >= 0)
@@ -187,8 +280,9 @@ static bool postJSON(const String &url, const String &payload, String &response)
     }
   }
 
-  // --- Leer cuerpo ---
-  response.reserve(contentLen ? contentLen : 128);
+  // ---- Leer body ----
+  response.reserve(contentLen ? contentLen : 256);
+
   if (chunked)
   {
     for (;;)
@@ -197,6 +291,7 @@ static bool postJSON(const String &url, const String &payload, String &response)
       if (!readLine(client, sz, HTTP_TIMEOUT_MS))
       {
         client.stop();
+        log_line_both("[HTTP][ETH][ERR] Timeout leyendo chunk size");
         return false;
       }
       sz.trim();
@@ -209,12 +304,14 @@ static bool postJSON(const String &url, const String &payload, String &response)
         }
         sz.trim();
       }
+
       unsigned long n = strtoul(sz.c_str(), nullptr, 16);
       if (n == 0)
       {
-        readLine(client, line, HTTP_TIMEOUT_MS);
+        readLine(client, line, HTTP_TIMEOUT_MS); // trailing CRLF
         break;
       }
+
       uint32_t t0 = millis();
       while (n > 0 && millis() - t0 < HTTP_TIMEOUT_MS)
       {
@@ -258,13 +355,17 @@ static bool postJSON(const String &url, const String &payload, String &response)
 
   client.stop();
 
+  // ---- LOG IN (bonito) ----
+  log_line_both("[HTTP][ETH] Código: %d", status);
   if (debugSerie)
   {
-    Serial.print(F("[HTTP][ETH] Código: "));
-    Serial.println(status);
-    Serial.println(F("[HTTP][ETH] Respuesta:"));
-    Serial.println(response);
+    Serial.println("[HTTP][ETH] Respuesta:");
+    Serial.println(truncateForLog(response, HTTP_LOG_MAX_CHARS));
   }
+
+  // Dump de campos recibidos (como tu ejemplo)
+  dumpJsonFieldsFromString("IN", response);
+
   return (status >= 200 && status < 300);
 }
 
@@ -713,37 +814,59 @@ bool httpPostRaw(const char *host, uint16_t port, const char *path,
 
 void getInicio()
 {
+  logbuf_pushf("[API] getInicio()");
+
   serializaInicio();
   const String url = serverURL + "/status";
+
   String resp;
   bool ok = postJSON(url, outputInicio, resp);
-  if (!ok && debugSerie)
-    Serial.println(F("[API] ERROR: status inicio"));
+
+  if (!ok)
+  {
+    logbuf_pushf("[API][ERR] status inicio HTTP FAIL");
+    if (debugSerie)
+      Serial.println(F("[API] ERROR: status inicio"));
+  }
+
   estadoRecibido = resp;
   descifraEstado();
 }
 
 void getEstado()
 {
+  logbuf_pushf("[API] getEstado()");
+
   serializaEstado();
   const String url = serverURL + "/status";
+
   String resp;
   bool ok = postJSON(url, outputEstado, resp);
-  if (!ok && debugSerie)
-    Serial.println(F("[API] ERROR: status"));
+
+  if (!ok)
+  {
+    logbuf_pushf("[API][ERR] status HTTP FAIL");
+    if (debugSerie)
+      Serial.println(F("[API] ERROR: status"));
+  }
+
   estadoRecibido = resp;
   descifraEstado();
 }
 
 void postTicket()
 {
+  logbuf_pushf("[API] postTicket()");
+
   serializaQR();
-  if (debugSerie)
-    inicioServidor = millis();
+  uint32_t t0 = millis();
 
   const String url = serverURL + "/validateQR";
   String resp;
   bool okHttp2xx = postJSON(url, outputTicket, resp);
+
+  logbuf_pushf("[API] validateQR http=%d time=%ums bytes=%u",
+               okHttp2xx, millis() - t0, resp.length());
 
   if (resp.length() > 0)
   {
@@ -752,36 +875,30 @@ void postTicket()
   }
   else
   {
-    if (debugSerie)
-      Serial.println(F("[API] validateQR sin cuerpo -> VERROR y READY"));
+    logbuf_pushf("[API][ERR] validateQR EMPTY_BODY");
     g_validateOutcome = VERROR;
     g_lastEd = "EMPTY_BODY";
     resetCycleReady();
-  }
-
-  if (debugSerie)
-  {
-    finServidor = millis();
-    Serial.print(F("Tiempo en Servidor: "));
-    Serial.print((finServidor - inicioServidor));
-    Serial.println(F(" ms"));
   }
 }
 
 void postPaso()
 {
+  logbuf_pushf("[API] postPaso()");
+
   serializaPaso();
   const String url = serverURL + "/validatePass";
+
   String resp;
   bool ok = postJSON(url, outputPaso, resp);
 
   if (!ok)
   {
-    if (debugSerie)
-      Serial.println(F("[API] ERROR: validatePass"));
+    logbuf_pushf("[API][ERR] validatePass HTTP FAIL");
     resetCycleReady();
     return;
   }
+  
   pasoRecibido = resp;
   descifraPaso();
 }
@@ -792,8 +909,14 @@ void reportFailure()
   const String url = serverURL + "/reportFailure";
   String resp;
   bool ok = postJSON(url, outputInicio /* reutilizo buffer */, resp);
-  if (!ok && debugSerie)
-    Serial.println(F("[API] ERROR: reportFailure"));
+  if (!ok)
+  {
+  }
+  {
+    logbuf_pushf("[API][ERR] reportFailure HTTP FAIL");
+    if (debugSerie)
+      Serial.println(F("[API] ERROR: reportFailure"));
+  }
   estadoRecibido = resp;
   descifraEstado();
 }

@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Configuración del torno</title>
+
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
+
+  <style>
+    :root {
+      --dark: #292734;
+      --dark-2: #1f1e28;
+      --red: #eb3a3a;
+      --red-2: #ff3a2d;
+      --bg: #fafafa;
+      --card: #ffffff;
+      --line: #e6e6ea;
+      --muted: #6b6a75;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--dark);
+      font-family: "Titillium Web", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ================= CABECERA GENERAL ================= */
+    .site-header {
+      background: linear-gradient(90deg, var(--dark) 0%, var(--dark-2) 33%, var(--red) 66%, var(--red-2) 100%);
+      padding: 22px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .site-header img {
+      height: 52px;
+      max-width: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .25));
+    }
+
+    /* Contenedor centrado */
+    .page {
+      min-height: calc(100vh - 96px);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 28px 14px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 880px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(90deg, var(--dark) 0%, var(--dark-2) 33%, var(--red) 66%, var(--red-2) 100%);
+      padding: 18px 18px;
+      color: #fff;
+    }
+
+    .card-header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    .msg {
+      margin: 0 0 14px 0;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--dark);
+      font-size: 14px;
+    }
+
+    form {
+      margin: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px 0;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--dark);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--dark);
+      outline: none;
+      font-size: 14px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(235, 58, 58, .8);
+      box-shadow: 0 0 0 4px rgba(235, 58, 58, .12);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 800;
+      letter-spacing: .3px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(to right, var(--red-2) 50%, var(--dark) 50%) no-repeat right bottom / 210% 100%;
+      transition: background-position .25s ease, transform .06s ease;
+    }
+
+    button:hover {
+      background-position: left bottom;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 800;
+      letter-spacing: .3px;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      color: var(--dark);
+      background: #fff;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    a.btn:hover {
+      border-color: rgba(41, 39, 52, .35);
+      box-shadow: 0 0 0 4px rgba(41, 39, 52, .08);
+    }
+
+    .note {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    /* ================= CONTADOR (nuevo) ================= */
+    .counter {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      margin: 0 0 14px 0;
+    }
+
+    .counter-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .counter-title {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .counter-value {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: .4px;
+      color: var(--dark);
+      line-height: 1.1;
+    }
+
+    .counter-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .counter-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(to right, var(--red-2) 50%, var(--dark) 50%) no-repeat right bottom / 210% 100%;
+      transition: background-position .25s ease, transform .06s ease;
+      white-space: nowrap;
+    }
+
+    .counter-btn:hover {
+      background-position: left bottom;
+    }
+
+    .counter-btn:active {
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 18px 10px;
+      }
+
+      .card-header h1 {
+        font-size: 18px;
+      }
+
+      .card-body {
+        padding: 14px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .site-header img {
+        height: 44px;
+      }
+
+      .counter {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .counter-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <img src="/qualicard.png" alt="Qualica-RD">
+  </header>
+
+  <div class="page">
+    <div class="card">
+      <div class="card-header">
+        <h1>Configuración del torno</h1>
+      </div>
+
+      <div class="card-body">
+
+        <!-- CONTADOR (nuevo) -->
+        <div class="counter">
+          <div class="counter-left">
+            <div class="counter-title">Aperturas totales</div>
+            <div class="counter-value" id="aperturasTotales">—</div>
+            <div class="counter-sub" id="aperturasInfo">Actualizando…</div>
+          </div>
+
+          <button type="button" class="counter-btn" id="btnResetAperturas">
+            Reiniciar contador
+          </button>
+        </div>
+
+        <div class="msg" id="cfgMsg">{{CFG_MSG}}</div>
+
+        <form method="POST" action="/config_save">
+          <label>Nombre de la placa</label>
+          <input name="deviceId" id="deviceId" value="{{DEVICE_ID}}" maxlength="5" inputmode="numeric"
+            autocomplete="off" autocapitalize="characters" spellcheck="false" pattern="ME[0-9]{3}"
+            title="Formato: ME seguido de 3 números (ej: ME001)" />
+
+
+          <div class="grid-2" style="margin-top: 6px;">
+            <div class="field">
+              <label>Sentido</label>
+              <select name="sentido">
+                <option {{SENTIDO_ENTRADA_SEL}}>Entrada</option>
+                <option {{SENTIDO_SALIDA_SEL}}>Salida</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Modo de red</label>
+              <select name="modoRed">
+                <option value="0" {{MODO_DHCP_SEL}}>DHCP</option>
+                <option value="1" {{MODO_ESTATICA_SEL}}>IP estática</option>
+              </select>
+            </div>
+          </div>
+
+          <label>IP</label>
+          <input name="ip" id="ip" value="{{IP}}" maxlength="15" inputmode="decimal" autocomplete="off"
+            spellcheck="false" placeholder="192.168.1.191" pattern="^(\d{1,3}\.){3}\d{1,3}$"
+            title="Formato IPv4: n.n.n.n" />
+
+
+          <div class="grid-2">
+            <div class="field">
+              <label>Gateway</label>
+              <input name="gw" id="gw" value="{{GATEWAY}}" maxlength="15" inputmode="decimal" autocomplete="off"
+                spellcheck="false" placeholder="192.168.1.250" pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                title="Formato IPv4: n.n.n.n" />
+
+            </div>
+            <div class="field">
+              <label>Subnet</label>
+              <input name="mask" id="subnet" value="{{SUBNET}}" maxlength="15" inputmode="decimal" autocomplete="off"
+                spellcheck="false" placeholder="255.255.255.0" pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                title="Formato IPv4: n.n.n.n" />
+
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>DNS 1</label>
+              <input name="dns1" id="dns1" value="{{DNS1}}" maxlength="15" inputmode="decimal" autocomplete="off"
+                spellcheck="false" placeholder="8.8.8.8" pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                title="Formato IPv4: n.n.n.n" />
+
+            </div>
+            <div class="field">
+              <label>DNS 2</label>
+              <input name="dns2" id="dns2" value="{{DNS2}}" maxlength="15" inputmode="decimal" autocomplete="off"
+                spellcheck="false" placeholder="4.4.4.4" pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                title="Formato IPv4: n.n.n.n" />
+
+            </div>
+          </div>
+
+          <label>URL del servidor</label>
+          <input name="urlBase" id="urlBase" value="{{URLBASE}}" maxlength="100" autocomplete="off" spellcheck="false"
+            inputmode="url" pattern="^https?://.{1,}$"
+            title="Debe empezar por http:// o https:// y tener máximo 100 caracteres" />
+
+          <div class="actions">
+            <button type="submit">Guardar</button>
+            <a class="btn" href="/menu">Volver</a>
+          </div>
+
+          <div class="note">
+            Nota: al guardar, el dispositivo reinicia para aplicar los cambios de red y backend.
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    function enforceDeviceId(el) {
+      let v = (el.value || "").toUpperCase();
+
+      // Quitar todo lo que no sea alfanumérico primero
+      v = v.replace(/[^A-Z0-9]/g, "");
+
+      // Forzar prefijo "ME"
+      if (!v.startsWith("ME")) {
+        // Si el usuario empieza metiendo números, los movemos detrás del ME
+        v = "ME" + v.replace(/[^0-9]/g, "");
+      }
+
+      // Después de ME: solo dígitos
+      const tail = v.slice(2).replace(/[^0-9]/g, "").slice(0, 3);
+
+      el.value = ("ME" + tail).slice(0, 5);
+    }
+
+    const deviceId = document.getElementById("deviceId");
+    if (deviceId) {
+      deviceId.addEventListener("input", () => enforceDeviceId(deviceId));
+      // Normalizar al cargar por si viene algo raro
+      enforceDeviceId(deviceId);
+    }
+
+    function enforceIPv4Chars(el) {
+      let v = (el.value || "");
+      // Solo dígitos y puntos
+      v = v.replace(/[^0-9.]/g, "");
+      // No permitir dos puntos seguidos
+      v = v.replace(/\.{2,}/g, ".");
+      // Máximo 15 chars (xxx.xxx.xxx.xxx)
+      v = v.slice(0, 15);
+      el.value = v;
+    }
+
+    ["ip", "gw", "mask", "dns1", "dns2"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", () => enforceIPv4Chars(el));
+      enforceIPv4Chars(el);
+    });
+
+    const urlBase = document.getElementById("urlBase");
+    if (urlBase) {
+      urlBase.addEventListener("input", () => {
+        urlBase.value = (urlBase.value || "").slice(0, 100);
+      });
+      urlBase.addEventListener("blur", () => {
+        urlBase.value = (urlBase.value || "").trim().slice(0, 100);
+      });
+    }
+
+    // Lógica tipo "aperturasTotalesPrev": solo pintar si cambia
+    let aperturasPrev = null;
+
+    function setInfo(txt) {
+      const el = document.getElementById('aperturasInfo');
+      if (el) el.textContent = txt;
+    }
+
+    async function cargarAperturas() {
+      try {
+        const r = await fetch('/stats', { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+
+        const v = (j && typeof j.aperturasTotales !== 'undefined') ? Number(j.aperturasTotales) : null;
+
+        if (v === null || Number.isNaN(v)) {
+          setInfo('Sin datos');
+          return;
+        }
+
+        if (aperturasPrev === null || v !== aperturasPrev) {
+          document.getElementById('aperturasTotales').textContent = String(v);
+          aperturasPrev = v;
+          setInfo('Actualizado');
+        } else {
+          setInfo('Sin cambios');
+        }
+      } catch (e) {
+        setInfo('Error de conexión');
+      }
+    }
+
+    async function resetAperturas() {
+      if (!confirm('¿Seguro que quieres reiniciar el contador de aperturas?')) return;
+
+      try {
+        const r = await fetch('/reset_aperturas', { method: 'POST' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+
+        aperturasPrev = null; // forzar refresco inmediato
+        await cargarAperturas();
+        alert('Contador reiniciado.');
+      } catch (e) {
+        alert('No se pudo reiniciar el contador.');
+      }
+    }
+
+    document.getElementById('btnResetAperturas').addEventListener('click', resetAperturas);
+
+    // Primera carga + refresco periódico (ajusta el intervalo a tu gusto)
+    cargarAperturas();
+    setInterval(cargarAperturas, 1000); // 1s: rápido y simple
+  </script>
+</body>
+
+</html>

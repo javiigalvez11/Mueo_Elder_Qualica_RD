@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Logs en vivo</title>
+
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
+
+  <style>
+    :root {
+      --dark: #292734;
+      --dark2: #1f1e28;
+      --red: #eb3a3a;
+      --red2: #ff3a2d;
+      --bg: #fafafa;
+      --card: #fff;
+      --line: #e6e6ea;
+      --muted: #6b6a75;
+      --ok: #1e9e59;
+      --warn: #b35a00;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--dark);
+      font-family: "Titillium Web", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ================= CABECERA GENERAL ================= */
+    .site-header {
+      background: linear-gradient(90deg, var(--dark) 0%, var(--dark2) 33%, var(--red) 66%, var(--red2) 100%);
+      padding: 22px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .site-header img {
+      height: 52px;
+      max-width: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .25));
+    }
+
+    .page {
+      min-height: calc(100vh - 96px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 28px 14px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 980px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(90deg, var(--dark) 0%, var(--dark2) 33%, var(--red) 66%, var(--red2) 100%);
+      padding: 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(179, 90, 0, .12);
+    }
+
+    .dot.ok {
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(30, 158, 89, .14);
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    p {
+      margin: 10px 0 12px 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f2f2f6;
+      color: var(--dark);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 12px 0 14px 0;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 160px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--dark);
+      outline: none;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      box-shadow: 0 0 0 4px rgba(41, 39, 52, .08);
+      border-color: rgba(41, 39, 52, .35);
+    }
+
+    .console {
+      width: 100%;
+      height: 62vh;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #0f0f14;
+      color: #f4f4f6;
+      padding: 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn,
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 900;
+      letter-spacing: .3px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .btn {
+      color: var(--dark);
+      background: #fff;
+      border: 1px solid var(--line);
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .btn:hover {
+      border-color: rgba(41, 39, 52, .35);
+      box-shadow: 0 0 0 4px rgba(41, 39, 52, .08);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(to right, var(--red2) 50%, var(--dark) 50%) no-repeat right bottom / 210% 100%;
+      transition: background-position .25s ease, transform .06s ease;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-position: left bottom;
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-danger {
+      color: #fff;
+      border: none;
+      background: linear-gradient(90deg, var(--red2) 0%, var(--red) 60%, #b81818 100%);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 0 0 4px rgba(235, 58, 58, .12);
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width:720px) {
+      .page {
+        padding: 18px 10px;
+      }
+
+      .card-body {
+        padding: 14px;
+      }
+
+      .card-header h2 {
+        font-size: 18px;
+      }
+
+      .site-header img {
+        height: 44px;
+      }
+
+      .console {
+        height: 58vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <img src="/qualicard.png" alt="Qualica-RD">
+  </header>
+
+  <div class="page">
+    <div class="card">
+      <div class="card-header">
+        <h2>Logs en vivo</h2>
+        <div class="status">
+          <span class="dot" id="dot"></span>
+          <span id="st">Conectando...</span>
+          <span class="pill" id="last">id: 0</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <p>
+          Este visor muestra eventos en tiempo real (RAM). No se guardan logs en flash.
+          Si no hay logs, revisa que estés logueado y que el firmware esté llamando a <span
+            class="pill">logbuf_pushf()</span>.
+        </p>
+
+        <div class="toolbar">
+          <div class="field" style="min-width: 220px;">
+            <label>Filtro por prefijo</label>
+            <select id="flt">
+              <option value="">Todos</option>
+              <option value="[HTTP]">[HTTP]</option>
+              <option value="[API]">[API]</option>  
+              <option value="[GM65]">[GM65]</option>
+              <option value="[IO]">[IO]</option>
+              <option value="[NET]">[NET]</option>
+            </select>
+          </div>
+
+          <div class="field" style="min-width: 180px;">
+            <label>Intervalo refresco (ms)</label>
+            <input id="iv" type="number" min="500" step="100" value="1000">
+          </div>
+
+          <div class="field" style="min-width: 160px;">
+            <label>Acción</label>
+            <button class="btn btn-primary" type="button" onclick="applyInterval()">Aplicar</button>
+          </div>
+        </div>
+
+        <div class="console" id="box"></div>
+
+        <div class="actions">
+          <button class="btn" type="button" onclick="clearBox()">Limpiar pantalla</button>
+          <button class="btn btn-danger" type="button" onclick="togglePause()" id="pauseBtn">Pausar</button>
+          <a class="btn" href="/menu">Volver al menú</a>
+        </div>
+
+        <div class="hint">
+          Consejo: si quieres ver solo lo último, usa “Limpiar pantalla” y deja el filtro en “Todos”.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let since = 0;
+    let paused = false;
+    let timer = null;
+
+    const box = document.getElementById('box');
+    const st = document.getElementById('st');
+    const dot = document.getElementById('dot');
+    const last = document.getElementById('last');
+    const flt = document.getElementById('flt');
+    const iv = document.getElementById('iv');
+
+    function setOk(ok) {
+      if (ok) dot.classList.add('ok');
+      else dot.classList.remove('ok');
+    }
+
+    function clearBox() {
+      box.textContent = '';
+    }
+
+    function togglePause() {
+      paused = !paused;
+      document.getElementById('pauseBtn').textContent = paused ? 'Reanudar' : 'Pausar';
+    }
+
+    function applyInterval() {
+      const ms = Math.max(500, parseInt(iv.value || '1000', 10));
+      if (timer) clearInterval(timer);
+      timer = setInterval(tick, ms);
+      tick();
+    }
+
+    async function tick() {
+      if (paused) return;
+
+      try {
+        const r = await fetch('/logs_data?since=' + since, { cache: 'no-store' });
+
+        if (r.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+        if (!r.ok) {
+          setOk(false);
+          st.textContent = 'HTTP ' + r.status;
+          return;
+        }
+
+        const j = await r.json();
+        setOk(true);
+
+        st.textContent = 'Conectado';
+        last.textContent = 'id: ' + (j.next || since);
+
+        const pref = flt.value || '';
+        if (j.items && j.items.length) {
+          for (const it of j.items) {
+            const line = '[' + it.id + '] ' + it.msg + '\n';
+            if (!pref || (it.msg && it.msg.startsWith(pref))) {
+              box.textContent += line;
+            }
+            since = it.id;
+          }
+          box.scrollTop = box.scrollHeight;
+        }
+      } catch (e) {
+        setOk(false);
+        st.textContent = 'Error de comunicación';
+      }
+    }
+
+    applyInterval();
+  </script>
+</body>
+
+</html>
